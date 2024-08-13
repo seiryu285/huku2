@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Model 3D Product Viewer</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .viewer-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .model-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 0.5s ease;
+        }
+        .product-info {
+            padding: 1rem;
+            background-color: white;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        }
+        .product-title {
+            font-size: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        .product-price {
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-bottom: 0.5em;
+        }
+        .product-description {
+            font-size: 0.9em;
+            margin-bottom: 1em;
+        }
+        .color-options, .size-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1em;
+        }
+        .color-option, .size-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .color-option.active, .size-option.active {
+            border-color: var(--primary-color);
+        }
+        .buy-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        .buy-button:hover {
+            background-color: var(--secondary-color);
+        }
+        .next-button {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            z-index: 10;
+        }
+        .interaction-guide {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: opacity 0.3s;
+        }
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+            .viewer-container {
+                flex: 2;
+            }
+            .product-info {
+                flex: 1;
+                max-width: 300px;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="viewer-container" id="viewer-container">
+            <iframe class="model-viewer"
+                title="Summer Shirt Dress"
+                frameborder="0"
+                allowfullscreen
+                mozallowfullscreen="true"
+                webkitallowfullscreen="true"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                xr-spatial-tracking
+                execution-while-out-of-viewport
+                execution-while-not-rendered
+                web-share
+                src="https://sketchfab.com/models/2757e5d01e094b6b805b86e3223d68f0/embed?autostart=1&ui_controls=0&ui_infos=0&ui_inspector=0&ui_stop=0&ui_watermark=0&ui_watermark_link=0">
+            </iframe>
+            <iframe class="model-viewer"
+                title="Miko Casual Cosplay Outfit"
+                frameborder="0"
+                allowfullscreen
+                mozallowfullscreen="true"
+                webkitallowfullscreen="true"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                xr-spatial-tracking
+                execution-while-out-of-viewport
+                execution-while-not-rendered
+                web-share
+                src="https://sketchfab.com/models/6eba320919454c9e9b2f507abed18e83/embed?autostart=1&ui_controls=0&ui_infos=0&ui_inspector=0&ui_stop=0&ui_watermark=0&ui_watermark_link=0">
+            </iframe>
+            <button class="next-button" onclick="changeModel(1)">▶</button>
+            <div class="interaction-guide">
+                Click arrow to change models. Drag to rotate. Scroll to zoom.
+            </div>
+        </div>
+        <div class="product-info" id="product-info">
+            <!-- Product info will be dynamically updated -->
+        </div>
+    </div>
+
+    <script>
+        let currentModelIndex = 0;
+        const models = document.querySelectorAll('.model-viewer');
+        const products = [
+            {
+                title: "Summer Shirt Dress",
+                price: "$79.99",
+                description: "A stylish and comfortable summer shirt dress, perfect for warm days. Made with breathable fabric and featuring a modern design that suits various occasions.",
+                colors: ["#000000", "#FFFFFF", "#87CEEB"],
+                sizes: ["S", "M", "L", "XL"]
+            },
+            {
+                title: "Miko Casual Cosplay Outfit",
+                price: "$129.99",
+                description: "An adorable Miko-inspired casual cosplay outfit. Perfect for anime enthusiasts and cosplay events. Comfortable and stylish for everyday wear.",
+                colors: ["#FF0000", "#FFFFFF", "#000000"],
+                sizes: ["S", "M", "L"]
+            }
+        ];
+
+        function changeModel(direction) {
+            currentModelIndex = (currentModelIndex + direction + models.length) % models.length;
+            updateModelDisplay();
+            updateProductInfo();
+        }
+
+        function updateModelDisplay() {
+            models.forEach((model, index) => {
+                model.style.transform = `translateX(${(index - currentModelIndex) * 100}%)`;
+            });
+        }
+
+        function updateProductInfo() {
+            const product = products[currentModelIndex];
+            const productInfo = document.getElementById('product-info');
+            productInfo.innerHTML = `
+                <h1 class="product-title">${product.title}</h1>
+                <div class="product-price">${product.price}</div>
+                <p class="product-description">${product.description}</p>
+                <div class="color-options">
+                    ${product.colors.map((color, index) => `
+                        <div class="color-option ${index === 0 ? 'active' : ''}" 
+                             style="background-color: ${color};" 
+                             onclick="changeColor(this, '${color}')"></div>
+                    `).join('')}
+                </div>
+                <div class="size-options">
+                    ${product.sizes.map((size, index) => `
+                        <div class="size-option ${index === 0 ? 'active' : ''}" 
+                             onclick="changeSize(this, '${size}')">${size}</div>
+                    `).join('')}
+                </div>
+                <button class="buy-button" onclick="addToCart()">Add to Cart</button>
+            `;
+        }
+
+        function changeColor(element, color) {
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            element.classList.add('active');
+            console.log(`Color changed to ${color}`);
+        }
+
+        function changeSize(element, size) {
+            document.querySelectorAll('.size-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            element.classList.add('active');
+            console.log(`Size changed to ${size}`);
+        }
+
+        function addToCart() {
+            const product = products[currentModelIndex];
+            alert(`Added ${product.title} to cart!`);
+        }
+
+        // Initialize
+        updateProductInfo();
+        setTimeout(() => {
+            document.querySelector('.interaction-guide').style.opacity = '0';
+        }, 5000);
+    </script>
+</body>
+</html>
